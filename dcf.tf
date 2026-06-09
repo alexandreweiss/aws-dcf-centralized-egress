@@ -13,12 +13,40 @@ resource "aviatrix_smart_group" "test_instance" {
   }
 }
 
+resource "aviatrix_web_group" "monip_org" {
+  name = "block-monip-org"
+
+  selector {
+    match_expressions {
+      snifilter = "monip.org"
+    }
+  }
+}
+
 resource "aviatrix_distributed_firewalling_policy_list" "egress" {
+  policies {
+    name     = "egress-block-monip"
+    action   = "DENY"
+    priority = 999
+    protocol = "TCP"
+    logging  = true
+
+    src_smart_groups = [aviatrix_smart_group.test_instance.uuid]
+    dst_smart_groups = [var.public_internet_smartgroup_uuid]
+    web_groups       = [aviatrix_web_group.monip_org.uuid]
+
+    port_ranges {
+      lo = 80
+      hi = 80
+    }
+  }
+
   policies {
     name     = "egress-web-allow-80"
     action   = "PERMIT"
     priority = 1000
     protocol = "TCP"
+    logging  = true
 
     src_smart_groups = [aviatrix_smart_group.test_instance.uuid]
     dst_smart_groups = [var.public_internet_smartgroup_uuid]
@@ -35,6 +63,7 @@ resource "aviatrix_distributed_firewalling_policy_list" "egress" {
     action   = "PERMIT"
     priority = 1001
     protocol = "TCP"
+    logging  = true
 
     src_smart_groups = [aviatrix_smart_group.test_instance.uuid]
     dst_smart_groups = [var.public_internet_smartgroup_uuid]
