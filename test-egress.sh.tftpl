@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+
+EIP1="${egress_eip1}"
+EIP2="${egress_eip2}"
+SCRIPT_PATH="/home/ubuntu/test-egress.sh"
+
+cat > "$SCRIPT_PATH" << 'INNERSCRIPT'
+#!/bin/bash
+set -euo pipefail
+EIP1="PLACEHOLDER1"
+EIP2="PLACEHOLDER2"
+echo "=== Aviatrix Centralized Egress Test ==="
+echo "Expected egress EIPs: $EIP1  $EIP2"
+ACTUAL_IP=$(curl -sf https://api.ipify.org)
+echo "Actual public IP seen by ipify: $ACTUAL_IP"
+if [ "$ACTUAL_IP" = "$EIP1" ] || [ "$ACTUAL_IP" = "$EIP2" ]; then
+  echo "PASS: traffic exits via Aviatrix egress gateway ($ACTUAL_IP)"
+else
+  echo "FAIL: $ACTUAL_IP does not match either egress gateway EIP"
+  exit 1
+fi
+INNERSCRIPT
+
+sed -i "s/PLACEHOLDER1/$EIP1/" "$SCRIPT_PATH"
+sed -i "s/PLACEHOLDER2/$EIP2/" "$SCRIPT_PATH"
+chmod +x "$SCRIPT_PATH"
+chown ubuntu:ubuntu "$SCRIPT_PATH"
+
+"$SCRIPT_PATH" > /var/log/egress-test.log 2>&1 || true
