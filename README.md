@@ -1,5 +1,11 @@
 # AWS DCF Centralized Egress — Aviatrix
 
+> **WARNING — LAB USE ONLY**
+>
+> This configuration is intrusive. Enabling egress on the Aviatrix FireNet causes the transit gateway to advertise a `0.0.0.0/0` default route into the Aviatrix platform. Any spoke VPC already attached to this transit — or attached later — will have its internet traffic redirected through the egress gateways immediately, potentially disrupting existing workloads that rely on their own internet paths (NAT Gateways, IGWs, other egress points).
+>
+> **Do not deploy this into a shared or production Aviatrix environment without coordinating with all spoke VPC owners first.**
+
 ## Business Context
 
 PYO operates payment infrastructure that makes outbound HTTPS calls to third-party partner APIs (payment processors, banks, fraud detection services). Those partners require PYO to declare a fixed set of source IP addresses that they whitelist on their firewalls.
